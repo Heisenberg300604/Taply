@@ -205,15 +205,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#3525cd',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.39,
-    shadowRadius: 14,
     elevation: 8,
   },
   submitBtnDisabled: {
     backgroundColor: '#b6b4ff',
-    shadowOpacity: 0,
     elevation: 0,
   },
   submitText: {

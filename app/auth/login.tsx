@@ -202,10 +202,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#3525cd',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.39,
-    shadowRadius: 14,
     elevation: 8,
   },
   submitText: {

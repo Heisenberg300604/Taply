@@ -1,15 +1,15 @@
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Register() {
   const router = useRouter();
@@ -166,10 +166,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
-    shadowColor: '#3525cd',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.39,
-    shadowRadius: 14,
     elevation: 8,
   },
   submitText: { fontFamily: 'InterSemiBold', fontSize: 16, color: '#fff' },

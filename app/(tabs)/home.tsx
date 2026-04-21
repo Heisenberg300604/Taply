@@ -1,12 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import {
-  View,
-  Text,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeMyCard() {
   return (
@@ -14,9 +14,6 @@ export default function HomeMyCard() {
       {/* ── Top App Bar ── */}
       <View style={styles.header}>
         <Text style={styles.logo}>Taply</Text>
-        <TouchableOpacity>
-          <Ionicons name="ellipsis-vertical" size={16} color="#4F46E5" />
-        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -25,8 +22,8 @@ export default function HomeMyCard() {
       >
         {/* ── Header Text ── */}
         <View style={styles.headerText}>
-          <Text style={styles.name}>Alex Mercer</Text>
-          <Text style={styles.role}>Digital Product Designer</Text>
+          <Text style={styles.name}>Nibedan Pati</Text>
+          <Text style={styles.role}>Software Engineer</Text>
         </View>
 
         {/* ── Card Area ── */}
@@ -41,11 +38,11 @@ export default function HomeMyCard() {
           </View>
 
           {/* Theme Selector */}
-          <View style={styles.themeRow}>
+          {/* <View style={styles.themeRow}>
             <TouchableOpacity style={[styles.themeBtn, styles.themeBtnLight]} />
             <TouchableOpacity style={[styles.themeBtn, { backgroundColor: '#313030' }]} />
             <TouchableOpacity style={[styles.themeBtn, { backgroundColor: '#f6ebdd' }]} />
-          </View>
+          </View> */}
         </View>
 
         {/* ── Action Buttons ── */}
