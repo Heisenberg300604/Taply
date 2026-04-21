@@ -41,25 +41,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          username,
+          name,
+        },
+      },
     });
 
     if (signUpError) return { error: signUpError };
     if (!data.user) return { error: { message: 'Sign-up failed' } };
 
-    if (username || name) {
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ username, name })
-      .eq('id', data.user.id);
-
-    if (profileError) {
-      // Handle unique constraint error
-      if (profileError.code === '23505') {
-        return { error: { message: 'Username already taken' } };
-      }
-      return { error: profileError };
-    }
-  }
+    // Note: The database trigger creates the profile row on auth.users insert.
+    // It should extract username and name from raw_user_meta_data.
 
     return { error: null };
   },

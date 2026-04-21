@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useState, useEffect } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -7,8 +8,30 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
+import { supabase } from '@/utils/supabase';
+import { useAuthStore } from '@/store/authStore';
 
 export default function HomeMyCard() {
+  const { session } = useAuthStore();
+  const [profile, setProfile] = useState<{ name: string; pronouns: string; avatar_url: string; role: string } | null>(null);
+
+  useEffect(() => {
+    if (session?.user) {
+      supabase.from('profiles').select('name, pronouns, avatar_url').eq('id', session.user.id).single().then(({ data }) => {
+        if (data) {
+          setProfile({
+            name: data.name || 'Anonymous User',
+            pronouns: data.pronouns || '',
+            avatar_url: data.avatar_url || '',
+            role: 'Software Engineer', // Keeping default role until db field added
+          });
+        }
+      });
+    }
+  }, [session]);
+
+  const initials = profile?.name ? profile.name.substring(0, 2).toUpperCase() : '??';
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* ── Top App Bar ── */}
@@ -22,8 +45,22 @@ export default function HomeMyCard() {
       >
         {/* ── Header Text ── */}
         <View style={styles.headerText}>
-          <Text style={styles.name}>Nibedan Pati</Text>
-          <Text style={styles.role}>Software Engineer</Text>
+          {profile?.avatar_url ? (
+            <Image 
+              source={{ uri: profile.avatar_url }} 
+              style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }} 
+              cachePolicy="memory-disk" 
+            />
+          ) : (
+            <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#e5e2e1', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+              <Text style={{ fontFamily: 'Manrope', fontSize: 24, color: '#3525cd' }}>{initials}</Text>
+            </View>
+          )}
+          <Text style={styles.name}>{profile?.name || 'Loading...'}</Text>
+          <Text style={styles.role}>
+            {profile?.role || 'Software Engineer'}
+            {profile?.pronouns ? ` • ${profile.pronouns}` : ''}
+          </Text>
         </View>
 
         {/* ── Card Area ── */}
