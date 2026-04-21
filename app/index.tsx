@@ -1,11 +1,5 @@
-import { Text, View } from "react-native";
+import { Redirect } from 'expo-router';
 
 export default function Index() {
-  return (
-    <View className="flex-1 items-center justify-center bg-blue-500">
-      <Text className="text-3xl font-bold text-white">
-        Welcome to Taply
-      </Text>
-    </View>
-  );
+  return <Redirect href="/onboarding/onboarding1" />;
 }
