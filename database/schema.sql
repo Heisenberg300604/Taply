@@ -58,6 +58,12 @@ CREATE POLICY "Only server can insert scans"
   FOR INSERT
   WITH CHECK (false);
 
+-- Policy: Users can view their own scans
+CREATE POLICY "Users can view own scans"
+  ON scans
+  FOR SELECT
+  USING (profile_id = auth.uid());
+
 
 -- Function to create profile automatically
 create or replace function public.handle_new_user()
@@ -108,3 +114,18 @@ CREATE POLICY "Anyone can update their own avatar."
 CREATE POLICY "Anyone can delete their own avatar."
   ON storage.objects FOR DELETE
   USING ( bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1] );
+
+-- ============================================
+-- 3. Account Deletion RPC
+-- ============================================
+
+-- Safely deletes the authenticated user from the auth system alongside cascade data
+CREATE OR REPLACE FUNCTION delete_user_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;

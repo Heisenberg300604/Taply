@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { supabase } from '@/utils/supabase';
+
 type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 
 // ─── Settings items ───────────────────────────────────────────────────────────
@@ -73,9 +75,14 @@ export default function Settings() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            // Empty function for now - no actual deletion
-            console.log('Account deletion requested (not implemented)');
+          onPress: async () => {
+            const { error } = await supabase.rpc('delete_user_account');
+            if (error) {
+              Alert.alert('Error', error.message);
+            } else {
+              await signOut();
+              router.replace('/auth/login');
+            }
           },
         },
       ]

@@ -7,17 +7,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '@/utils/supabase';
+import { useAuthStore } from '@/store/authStore';
+import { useEffect, useState, useCallback } from 'react';
+import Animated, { useSharedValue, useAnimatedProps, withTiming } from 'react-native-reanimated';
+import { TextInput, RefreshControl } from 'react-native';
 
-// ─── Bar chart data (matches design) ─────────────────────────────────────────
-const BARS = [
-  { label: 'Mon', height: 48, opacity: 0.2, color: '#3525cd' },
-  { label: 'Tue', height: 96, opacity: 0.2, color: '#3525cd' },
-  { label: 'Wed', height: 192, opacity: 0.6, color: '#3525cd', active: true },
-  { label: 'Thu', height: 128, opacity: 0.2, color: '#3525cd' },
-  { label: 'Fri', height: 160, opacity: 0.2, color: '#3525cd' },
-  { label: 'Sat', height: 64, opacity: 0.2, color: '#3525cd' },
-  { label: 'Sun', height: 40, opacity: 0.2, color: '#3525cd' },
-];
+const AnimatedText = Animated.createAnimatedComponent(TextInput);
+
+// Removed static BARS and SCANS arrays since we are now fully dynamic
 
 // ─── Recent Scans ─────────────────────────────────────────────────────────────
 const SCANS = [
@@ -28,19 +26,112 @@ const SCANS = [
 ];
 
 export default function AnalyticsInsights() {
+  const { session } = useAuthStore();
+  const [totalScans, setTotalScans] = useState(0);
+  const [recentScans, setRecentScans] = useState<any[]>([]);
+  const [mobilePct, setMobilePct] = useState(0);
+  const [desktopPct, setDesktopPct] = useState(0);
+  
+  const [dynamicBars, setDynamicBars] = useState<any[]>([]);
+  const [trend, setTrend] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  const animatedValue = useSharedValue(0);
+
+  const fetchAnalytics = async () => {
+    if (!session?.user) return;
+    const { data, error } = await supabase.from('scans').select('scanned_at, device, city').eq('profile_id', session.user.id).order('scanned_at', { ascending: false });
+    if (error) {
+      console.error('Fetch Analytics Error:', error);
+      return;
+    }
+    if (data) {
+      setTotalScans(data.length);
+      animatedValue.value = withTiming(data.length, { duration: 1500 });
+      setRecentScans(data.slice(0, 5));
+      
+      const deviceData = data.reduce((acc: any, val) => {
+        const d = (val.device || '').toLowerCase();
+        if (d.includes('mobile')) acc.m++;
+        else if (d.includes('desktop') || d.includes('mac') || d.includes('windows')) acc.d++;
+        else acc.m++; // default unknown to mobile
+        return acc;
+      }, { m: 0, d: 0 });
+      const total = deviceData.m + deviceData.d || 1; 
+      setMobilePct(Math.round((deviceData.m / total) * 100));
+      setDesktopPct(Math.round((deviceData.d / total) * 100));
+
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+      let thisWeekCount = 0;
+      let lastWeekCount = 0;
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const currentBars = days.map(d => ({ label: d, height: 4, count: 0, opacity: 0.2, color: '#3525cd', active: false }));
+
+      data.forEach((scan) => {
+         const scanDate = new Date(scan.scanned_at);
+         if (scanDate >= oneWeekAgo) {
+             thisWeekCount++;
+             const dayName = days[scanDate.getDay()];
+             const bar = currentBars.find(b => b.label === dayName);
+             if(bar) bar.count++;
+         } else if (scanDate >= twoWeeksAgo && scanDate < oneWeekAgo) {
+             lastWeekCount++;
+         }
+      });
+      
+      let percentChange = 0;
+      if (lastWeekCount === 0) {
+          percentChange = thisWeekCount > 0 ? 100 : 0;
+      } else {
+          percentChange = Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100);
+      }
+      setTrend(percentChange);
+
+      const maxCount = Math.max(...currentBars.map(b => b.count), 1);
+      currentBars.forEach(b => {
+         b.height = Math.max(4, (b.count / maxCount) * 192);
+         if (b.count === maxCount && maxCount > 0) {
+             b.opacity = 0.6;
+             b.active = true;
+         }
+      });
+      const orderedBars = [
+         currentBars[1], currentBars[2], currentBars[3], currentBars[4], currentBars[5], currentBars[6], currentBars[0]
+      ];
+      setDynamicBars(orderedBars);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [session]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchAnalytics();
+    setRefreshing(false);
+  }, [session]);
+
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      text: `${Math.floor(animatedValue.value)}`,
+    } as any;
+  });
+
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* ── Top App Bar ── */}
       <View style={styles.header}>
         <Text style={styles.logo}>Taply</Text>
-        <TouchableOpacity>
-          <Ionicons name="ellipsis-vertical" size={16} color="#4F46E5" />
-        </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3525cd" />}
       >
         {/* ── Page Title ── */}
         <View style={styles.pageTitle}>
@@ -54,10 +145,17 @@ export default function AnalyticsInsights() {
         <View style={styles.metricCard}>
           <Text style={styles.metricLabel}>TOTAL SCANS</Text>
           <View style={styles.metricRow}>
-            <Text style={styles.metricValue}>1,248</Text>
-            <View style={styles.metricBadge}>
-              <Ionicons name="trending-up" size={12} color="#3525cd" />
-              <Text style={styles.metricBadgeText}>+12.5%</Text>
+            <AnimatedText 
+              style={styles.metricValue} 
+              animatedProps={animatedProps} 
+              editable={false} 
+              defaultValue="0" 
+            />
+            <View style={[styles.metricBadge, trend < 0 && { backgroundColor: 'rgba(186, 26, 26, 0.1)' }]}>
+              <Ionicons name={trend < 0 ? "trending-down" : "trending-up"} size={12} color={trend < 0 ? "#ba1a1a" : "#3525cd"} />
+              <Text style={[styles.metricBadgeText, trend < 0 && { color: "#ba1a1a" }]}>
+                {trend > 0 ? '+' : ''}{trend}%
+              </Text>
             </View>
           </View>
         </View>
@@ -66,7 +164,7 @@ export default function AnalyticsInsights() {
         <View style={styles.chartCard}>
           <Text style={styles.cardTitle}>Weekly Scans</Text>
           <View style={styles.chartArea}>
-            {BARS.map((bar, i) => (
+            {dynamicBars.map((bar, i) => (
               <View key={i} style={styles.barCol}>
                 <View
                   style={[
@@ -95,10 +193,10 @@ export default function AnalyticsInsights() {
               <Ionicons name="phone-portrait-outline" size={18} color="#464555" />
               <Text style={styles.deviceName}>Mobile</Text>
             </View>
-            <Text style={styles.devicePct}>82%</Text>
+            <Text style={styles.devicePct}>{mobilePct}%</Text>
           </View>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '82%', backgroundColor: '#3525cd' }]} />
+            <View style={[styles.progressFill, { width: `${mobilePct}%`, backgroundColor: '#3525cd' }]} />
           </View>
 
           <View style={styles.spacer} />
@@ -109,10 +207,10 @@ export default function AnalyticsInsights() {
               <Ionicons name="desktop-outline" size={18} color="#464555" />
               <Text style={styles.deviceName}>Desktop</Text>
             </View>
-            <Text style={styles.devicePct}>18%</Text>
+            <Text style={styles.devicePct}>{desktopPct}%</Text>
           </View>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '18%', backgroundColor: '#b6b4ff' }]} />
+            <View style={[styles.progressFill, { width: `${desktopPct}%`, backgroundColor: '#b6b4ff' }]} />
           </View>
         </View>
 
@@ -125,23 +223,22 @@ export default function AnalyticsInsights() {
             </TouchableOpacity>
           </View>
 
-          {SCANS.map((scan, i) => (
-            <View
-              key={i}
-              style={[styles.scanItem, scan.highlighted && styles.scanItemHighlighted]}
-            >
+          {recentScans.length > 0 ? recentScans.map((scan, i) => (
+            <View key={i} style={[styles.scanItem, i === 0 && styles.scanItemHighlighted]}>
               <View style={styles.scanLeft}>
                 <View style={styles.scanIconCircle}>
                   <Ionicons name="location-outline" size={16} color="#464555" />
                 </View>
                 <View>
-                  <Text style={styles.scanCity}>{scan.city}</Text>
-                  <Text style={styles.scanDevice}>{scan.device}</Text>
+                  <Text style={styles.scanCity}>{scan.city || 'Unknown Location'}</Text>
+                  <Text style={styles.scanDevice}>{scan.device ? scan.device : 'Mobile'}</Text>
                 </View>
               </View>
-              <Text style={styles.scanTime}>{scan.time}</Text>
+              <Text style={styles.scanTime}>Recent</Text>
             </View>
-          ))}
+          )) : (
+            <Text style={{ fontFamily: 'Inter', color: '#777587', textAlign: 'center', marginVertical: 12 }}>No scans yet. Share your card to see them!</Text>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

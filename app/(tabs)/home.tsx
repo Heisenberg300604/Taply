@@ -20,24 +20,40 @@ import * as Clipboard from 'expo-clipboard';
 
 export default function HomeMyCard() {
   const { session } = useAuthStore();
-  const [profile, setProfile] = useState<{ name: string; pronouns: string; avatar_url: string; role: string; username: string } | null>(null);
+  const [profile, setProfile] = useState<{ name: string; pronouns: string; avatar_url: string; role: string; username: string; theme: string } | null>(null);
   const cardRef = useRef<View>(null);
 
   useEffect(() => {
     if (session?.user) {
-      supabase.from('profiles').select('name, pronouns, avatar_url, username').eq('id', session.user.id).single().then(({ data }) => {
+      supabase.from('profiles').select('name, pronouns, avatar_url, username, theme').eq('id', session.user.id).single().then(({ data }) => {
         if (data) {
           setProfile({
             name: data.name || 'Anonymous User',
             pronouns: data.pronouns || '',
             avatar_url: data.avatar_url || '',
             username: data.username || '',
+            theme: data.theme || 'light',
             role: 'Software Engineer', // Keeping default role until db field added
           });
         }
       });
     }
   }, [session]);
+
+  const updateTheme = async (newTheme: string) => {
+    if (!session?.user) return;
+    setProfile(prev => prev ? { ...prev, theme: newTheme } : null);
+    await supabase.from('profiles').update({ theme: newTheme }).eq('id', session.user.id);
+  };
+
+  const THEMES: Record<string, { bg: string; qr: string }> = {
+    minimal: { bg: '#F9FAFB', qr: '#1E293B' },
+    lavender: { bg: '#F3E8FF', qr: '#6B21A8' },
+    sage: { bg: '#ECFDF5', qr: '#065F46' },
+    ocean: { bg: '#E0F2FE', qr: '#0369A1' },
+  };
+
+  const activeThemeObj = profile?.theme && THEMES[profile.theme] ? THEMES[profile.theme] : THEMES.minimal;
 
   const initials = profile?.name ? profile.name.substring(0, 2).toUpperCase() : '??';
   const profileUrl = profile?.username ? `https://taply-profiles.vercel.app/u/${profile.username}` : 'https://taply-profiles.vercel.app/';
@@ -116,7 +132,7 @@ export default function HomeMyCard() {
         </View>
 
         {/* ── Card Area ── */}
-        <View style={styles.cardArea} ref={cardRef} collapsable={false}>
+        <View style={[styles.cardArea, { backgroundColor: activeThemeObj.bg }]} ref={cardRef} collapsable={false}>
           <Text style={styles.cardHint}>Scan this to view my profile</Text>
 
           {/* QR Code */}
@@ -124,17 +140,25 @@ export default function HomeMyCard() {
             <QRCode 
               value={profileUrl}
               size={192}
-              color="#3525cd"
-              backgroundColor="#fff"
+              color={activeThemeObj.qr}
+              backgroundColor={activeThemeObj.bg}
             />
           </View>
 
           {/* Theme Selector */}
-          {/* <View style={styles.themeRow}>
-            <TouchableOpacity style={[styles.themeBtn, styles.themeBtnLight]} />
-            <TouchableOpacity style={[styles.themeBtn, { backgroundColor: '#313030' }]} />
-            <TouchableOpacity style={[styles.themeBtn, { backgroundColor: '#f6ebdd' }]} />
-          </View> */}
+          <View style={styles.themeRow}>
+            {Object.keys(THEMES).map((themeKey) => (
+              <TouchableOpacity 
+                key={themeKey}
+                style={[
+                  styles.themeBtn, 
+                  { backgroundColor: THEMES[themeKey].bg },
+                  profile?.theme === themeKey && { borderWidth: 2, borderColor: '#3525cd' }
+                ]} 
+                onPress={() => updateTheme(themeKey)}
+              />
+            ))}
+          </View>
         </View>
 
         {/* ── Action Buttons ── */}

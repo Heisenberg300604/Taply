@@ -7,6 +7,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -225,10 +227,12 @@ export default function ProfileEditCard() {
           <Text className="font-manrope text-xl text-primary-container tracking-[-1px]">Taply</Text>
           <Text className="font-inter-medium text-xs text-on-surface-variant">Edit Profile</Text>
         </View>
-        <TouchableOpacity>
-          <Ionicons name="ellipsis-vertical" size={16} color="#4F46E5" />
-        </TouchableOpacity>
       </View>
+
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        style={{ flex: 1 }}
+      >
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -383,6 +387,7 @@ export default function ProfileEditCard() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
