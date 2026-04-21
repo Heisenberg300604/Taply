@@ -1,7 +1,7 @@
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -13,7 +13,7 @@ export default function Onboarding2() {
       {/* ── Header ── */}
       <View style={styles.header}>
         <Text style={styles.logo}>Taply</Text>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)/home')}>
+        <TouchableOpacity onPress={() => router.replace('/auth/register')}>
           <Text style={styles.skip}>Skip</Text>
         </TouchableOpacity>
       </View>

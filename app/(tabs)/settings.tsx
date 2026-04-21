@@ -1,13 +1,16 @@
+import { useAuthStore } from '@/store/authStore';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import type { ComponentProps } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  Alert,
   ScrollView,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
 
 type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 
@@ -40,6 +43,45 @@ const SETTINGS = [
 ];
 
 export default function Settings() {
+  const { signOut } = useAuthStore();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/auth/login');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action is permanent and cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            // Empty function for now - no actual deletion
+            console.log('Account deletion requested (not implemented)');
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* ── Top App Bar ── */}
@@ -83,13 +125,13 @@ export default function Settings() {
           <Text style={styles.dangerLabel}>DANGER ZONE</Text>
 
           {/* Logout */}
-          <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={18} color="#ba1a1a" />
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
 
           {/* Delete Account */}
-          <TouchableOpacity style={styles.deleteBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.deleteBtn} activeOpacity={0.8} onPress={handleDeleteAccount}>
             <Ionicons name="trash-outline" size={18} color="#ba1a1a" />
             <Text style={styles.deleteText}>Delete Account</Text>
           </TouchableOpacity>

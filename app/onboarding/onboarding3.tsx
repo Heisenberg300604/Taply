@@ -15,8 +15,20 @@ const BAR_DATA = [
     { label: 'S', h: 40, opacity: 0.25 },
 ];
 
+import { useAuthStore } from '@/store/authStore';
+
 export default function Onboarding3() {
     const router = useRouter();
+    const { session, completeOnboarding } = useAuthStore();
+
+    const handleGetStarted = async () => {
+        if (session) {
+            await completeOnboarding();
+            router.replace('/(tabs)/home');
+        } else {
+            router.replace('/auth/register');
+        }
+    };
 
     return (
         <SafeAreaView style={styles.root}>
@@ -91,7 +103,7 @@ export default function Onboarding3() {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.getStartedBtn}
-                    onPress={() => router.replace('/auth/register')}
+                    onPress={handleGetStarted}
                     activeOpacity={0.85}
                 >
                     <Text style={styles.getStartedText}>Get Started</Text>

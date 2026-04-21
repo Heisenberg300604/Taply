@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,12 +11,35 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Login() {
   const router = useRouter();
+  const { signIn } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Login Failed', error.message);
+    } else {
+      router.replace('/(tabs)/home');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.root}>
@@ -54,6 +78,8 @@ export default function Login() {
                 autoCapitalize="none"
                 autoComplete="email"
                 returnKeyType="next"
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
 
@@ -77,6 +103,9 @@ export default function Login() {
                   autoCapitalize="none"
                   autoComplete="password"
                   returnKeyType="done"
+                  value={password}
+                  onChangeText={setPassword}
+                  onSubmitEditing={handleLogin}
                 />
                 <TouchableOpacity
                   style={styles.eyeBtn}
@@ -94,11 +123,16 @@ export default function Login() {
 
             {/* Submit */}
             <TouchableOpacity
-              style={styles.submitBtn}
+              style={[styles.submitBtn, loading && { opacity: 0.7 }]}
               activeOpacity={0.85}
-              onPress={() => router.replace('/(tabs)/home')}
+              onPress={handleLogin}
+              disabled={loading}
             >
-              <Text style={styles.submitText}>Sign In</Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.submitText}>Sign In</Text>
+              )}
             </TouchableOpacity>
           </View>
 

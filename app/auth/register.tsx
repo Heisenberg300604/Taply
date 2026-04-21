@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
 import {
   ScrollView,
   StyleSheet,
@@ -8,12 +9,39 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Register() {
   const router = useRouter();
+  const { signUp } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!email || !password || !username) {
+      Alert.alert('Error', 'Please fill in all required fields (Email, Username, Password)');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await signUp(email, password, username, name);
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Registration Failed', error.message);
+    } else {
+      // Assuming auto-login or manual redirect as appropriate
+      Alert.alert('Success', 'Account created! Please verify your email if required.');
+      // The auth listener in \`app/_layout.tsx\` might take over if auto-login happens.
+    }
+  };
 
   return (
     <SafeAreaView style={styles.root}>
@@ -45,6 +73,8 @@ export default function Register() {
               placeholder="Jane Doe"
               placeholderTextColor="#777587"
               autoCapitalize="words"
+              value={name}
+              onChangeText={setName}
             />
           </View>
 
@@ -57,6 +87,8 @@ export default function Register() {
               placeholderTextColor="#777587"
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
@@ -68,6 +100,8 @@ export default function Register() {
               placeholder="@janedoe"
               placeholderTextColor="#777587"
               autoCapitalize="none"
+              value={username}
+              onChangeText={setUsername}
             />
           </View>
 
@@ -81,6 +115,9 @@ export default function Register() {
                 placeholderTextColor="#777587"
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                value={password}
+                onChangeText={setPassword}
+                onSubmitEditing={handleRegister}
               />
               <TouchableOpacity
                 style={styles.eyeBtn}
@@ -96,8 +133,17 @@ export default function Register() {
           </View>
 
           {/* Submit */}
-          <TouchableOpacity style={styles.submitBtn} activeOpacity={0.85}>
-            <Text style={styles.submitText}>Create Account</Text>
+          <TouchableOpacity
+            style={[styles.submitBtn, loading && { opacity: 0.7 }]}
+            activeOpacity={0.85}
+            onPress={handleRegister}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitText}>Create Account</Text>
+            )}
           </TouchableOpacity>
         </View>
 
