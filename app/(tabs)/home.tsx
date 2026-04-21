@@ -1,29 +1,37 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { supabase } from '@/utils/supabase';
 import { useAuthStore } from '@/store/authStore';
+import QRCode from 'react-native-qrcode-svg';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';
+import * as Clipboard from 'expo-clipboard';
 
 export default function HomeMyCard() {
   const { session } = useAuthStore();
-  const [profile, setProfile] = useState<{ name: string; pronouns: string; avatar_url: string; role: string } | null>(null);
+  const [profile, setProfile] = useState<{ name: string; pronouns: string; avatar_url: string; role: string; username: string } | null>(null);
+  const cardRef = useRef<View>(null);
 
   useEffect(() => {
     if (session?.user) {
-      supabase.from('profiles').select('name, pronouns, avatar_url').eq('id', session.user.id).single().then(({ data }) => {
+      supabase.from('profiles').select('name, pronouns, avatar_url, username').eq('id', session.user.id).single().then(({ data }) => {
         if (data) {
           setProfile({
             name: data.name || 'Anonymous User',
             pronouns: data.pronouns || '',
             avatar_url: data.avatar_url || '',
+            username: data.username || '',
             role: 'Software Engineer', // Keeping default role until db field added
           });
         }
@@ -32,6 +40,50 @@ export default function HomeMyCard() {
   }, [session]);
 
   const initials = profile?.name ? profile.name.substring(0, 2).toUpperCase() : '??';
+  const profileUrl = profile?.username ? `https://taply-profiles.vercel.app/u/${profile.username}` : 'https://taply-profiles.vercel.app/';
+
+  const shareCard = async () => {
+    try {
+      if (cardRef.current) {
+        const uri = await captureRef(cardRef, {
+          format: 'png',
+          quality: 1,
+        });
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/png',
+          dialogTitle: 'Share your Taply card',
+        });
+      }
+    } catch (err) {
+      Alert.alert('Error sharing', String(err));
+    }
+  };
+
+  const saveCard = async () => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to save photos.');
+        return;
+      }
+      
+      if (cardRef.current) {
+        const uri = await captureRef(cardRef, {
+          format: 'png',
+          quality: 1,
+        });
+        await MediaLibrary.saveToLibraryAsync(uri);
+        Alert.alert('Saved', 'Card saved to your photos.');
+      }
+    } catch (err) {
+      Alert.alert('Error saving', String(err));
+    }
+  };
+
+  const copyLink = async () => {
+    await Clipboard.setStringAsync(profileUrl);
+    Alert.alert('Link Copied', 'Profile link copied to clipboard!');
+  };
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
       {/* ── Top App Bar ── */}
@@ -64,14 +116,17 @@ export default function HomeMyCard() {
         </View>
 
         {/* ── Card Area ── */}
-        <View style={styles.cardArea}>
+        <View style={styles.cardArea} ref={cardRef} collapsable={false}>
           <Text style={styles.cardHint}>Scan this to view my profile</Text>
 
           {/* QR Code */}
           <View style={styles.qrWrapper}>
-            <View style={styles.qrPlaceholder}>
-              <Ionicons name="qr-code-outline" size={96} color="#3525cd" />
-            </View>
+            <QRCode 
+              value={profileUrl}
+              size={192}
+              color="#3525cd"
+              backgroundColor="#fff"
+            />
           </View>
 
           {/* Theme Selector */}
@@ -85,19 +140,19 @@ export default function HomeMyCard() {
         {/* ── Action Buttons ── */}
         <View style={styles.actionsGrid}>
           {/* Share */}
-          <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.shareBtn} activeOpacity={0.85} onPress={shareCard}>
             <Ionicons name="share-outline" size={20} color="#fff" />
             <Text style={styles.shareBtnText}>Share</Text>
           </TouchableOpacity>
 
           {/* Save */}
-          <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.8} onPress={saveCard}>
             <Ionicons name="download-outline" size={18} color="#1c1b1b" />
             <Text style={styles.secondaryBtnText}>Save</Text>
           </TouchableOpacity>
 
           {/* Copy Link */}
-          <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.secondaryBtn} activeOpacity={0.8} onPress={copyLink}>
             <Ionicons name="link-outline" size={18} color="#1c1b1b" />
             <Text style={styles.secondaryBtnText}>Copy Link</Text>
           </TouchableOpacity>

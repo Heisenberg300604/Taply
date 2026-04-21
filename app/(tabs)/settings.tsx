@@ -104,7 +104,12 @@ export default function Settings() {
         {/* ── Settings List ── */}
         <View style={styles.settingsList}>
           {SETTINGS.map((item) => (
-            <TouchableOpacity key={item.id} style={styles.settingItem} activeOpacity={0.75}>
+            <TouchableOpacity 
+              key={item.id} 
+              style={styles.settingItem} 
+              activeOpacity={0.75}
+              onPress={() => router.push('/coming-soon')}
+            >
               {/* Icon bg */}
               <View style={styles.iconBg}>
                 <Ionicons name={item.icon} size={18} color="#3525cd" />
@@ -122,7 +127,6 @@ export default function Settings() {
 
         {/* ── Danger Zone ── */}
         <View style={styles.dangerZone}>
-          <Text style={styles.dangerLabel}>DANGER ZONE</Text>
 
           {/* Logout */}
           <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.8} onPress={handleLogout}>
