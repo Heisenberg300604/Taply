@@ -1,50 +1,69 @@
-# Welcome to your Expo app 👋
+# Taply
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Taply is a live, digital business card app built for developers, students, and professionals. Update your profile once, and every QR code you've ever shared updates instantly. 
 
-## Get started
+Nobody needs to download an app to read your card — a standard camera scan opens your live presence on the web.
 
-1. Install dependencies
+## Problem Statement
+The traditional exchange of contact information relies on paper cards that quickly go stale, offer no analytics on genuine interest, and require manual follow-ups across various platforms. Taply digitizes this ritual, allowing you to hand off a dynamic profile via an auto-updating QR code that requires zero app installation from the recipient.
 
+## Architecture
+
+```mermaid
+graph TD
+    A[Mobile App - Expo React Native] -->|Auth & Profile| B(Supabase Postgres)
+    A -->|Avatar Uploads| C(Supabase Storage)
+    A -->|Session State| D[Expo Secure Store]
+    B -->|Live Profile Data| E[Vercel Public Web Profile]
+    F[Scan Recipient - Phone Camera] --> E
+```
+
+## Tech Stack & Reasoning
+
+*   **React Native & Expo (SDK 51)**: Enables robust cross-platform mobile development (iOS/Android) from a singular, manageable codebase.
+*   **Expo Router**: Provides file-based routing that seamlessly handles deep linking, auth state flows, and modular tabs.
+*   **Supabase (PostgreSQL, Auth, Storage)**: A complete backend-as-a-service. Utilizes Row Level Security (RLS) to ensure users can only modify their own profiles while maintaining public read access for card scans.
+*   **Zustand**: A lightweight, boilerplate-free state management library used for handling global authentication and session states.
+*   **NativeWind & StyleSheets**: Hybrid styling strategy allowing rapid utility-class UI building (Tailwind) alongside rigid React Native StyleSheets.
+
+## Features Implemented
+
+*   **Authentication Flow**: Secure Sign Up, Log In, and Forgot Password flows via Supabase Auth.
+*   **First-Time Onboarding**: Engaging 3-screen tutorial flow for new app installs.
+*   **My Card Dashboard**: Instant SVG-based QR code rendering with offline support.
+*   **Interactive Profile Builder**: Customizable Display Name, Pronouns, Bio, and an interactive draggable Links Manager.
+*   **Avatar Management**: Upload, compress, and reliably store profile pictures.
+*   **Analytics Dashboard**: Real-time insights into Total Scans, Device Breakdown (Mobile vs. Desktop), and Recent Scan History.
+*   **Card Sharing Options**: Copy to clipboard, save QR as a device image, or launch native iOS/Android sharing sheets.
+*   **Customization Themes**: Switch between Minimal, Lavender, Sage, and Ocean themes to globally recolor your shareable app interface and QR card.
+
+## Setup Instructions
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Heisenberg300604/Taply.git
+   cd Taply
+   ```
+
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. Start the app
+3. **Environment Setup:**
+   Create a `.env` file at the root of your project and add your Supabase credentials:
+   ```env
+   EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
+4. **Run the App:**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+## Known Limitations
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+*   **Social & NFC**: Social Logins (Google/Apple) and NFC "Tap to Share" are slated for post-MVP.
+*   **Web Reliance**: The web-based public profile (`/u/[username]`) requires a separate web deployment strategy (e.g., Vercel) to complete the ecosystem.
+*   **Geolocation Precision**: City-level tracking in analytics relies on an external Edge Function handling IP conversion, and will report "Unknown Location" if that serverless function fails.
