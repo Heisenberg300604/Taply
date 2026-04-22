@@ -54,12 +54,12 @@ graph TD
    Create a `.env` file at the root of your project and add your Supabase credentials:
    ```env
    EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   EXPO_PUBLIC_SUPABASE_KEY=your_supabase_key
    ```
 
 4. **Run the App:**
    ```bash
-   npx expo start
+   npx expo start -c
    ```
 
 ## Known Limitations
