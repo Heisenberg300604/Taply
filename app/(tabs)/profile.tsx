@@ -116,15 +116,18 @@ export default function ProfileEditCard() {
         { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
       );
 
-      const response = await fetch(manipResult.uri);
-      const blob = await response.blob();
-      
       const fileName = `${session.user.id}/${Date.now()}.jpg`;
+
+      const formData = new FormData();
+      formData.append('file', {
+        uri: manipResult.uri,
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+      } as any);
 
       const { data, error } = await supabase.storage
         .from('avatars')
-        .upload(fileName, blob, {
-          contentType: 'image/jpeg',
+        .upload(fileName, formData, {
           upsert: true,
         });
 
@@ -223,9 +226,9 @@ export default function ProfileEditCard() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4">
-        <View className="items-start gap-y-0.5">
-          <Text className="font-manrope text-xl text-primary-container tracking-[-1px]">Taply</Text>
-          <Text className="font-inter-medium text-xs text-on-surface-variant">Edit Profile</Text>
+        <View className="items-start gap-y-1">
+          <Text style={{ fontFamily: 'Manrope', fontSize: 24, fontWeight: '900', color: '#4f46e5', letterSpacing: -1 }}>Taply</Text>
+          <Text className="font-inter-medium text-sm text-on-surface-variant">Edit Profile</Text>
         </View>
       </View>
 
@@ -233,30 +236,29 @@ export default function ProfileEditCard() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
         style={{ flex: 1 }}
       >
-
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerClassName="px-6 pt-2 pb-12 gap-y-10"
+        contentContainerClassName="px-6 pt-4 pb-12 gap-y-12"
         keyboardShouldPersistTaps="handled"
       >
         {/* Avatar Section */}
-        <View className="items-center gap-y-1 mb-2">
+        <View className="items-center gap-y-2 mb-2">
           {uploading ? (
-            <View className="w-32 h-32 rounded-full bg-primary-fixed items-center justify-center mb-3">
+            <View className="w-32 h-32 rounded-full bg-surface-container-high items-center justify-center mb-2">
               <ActivityIndicator color="#3525cd" size="large" />
             </View>
           ) : avatarUrl ? (
             <Image 
               source={{ uri: avatarUrl }} 
-              style={{ width: 128, height: 128, borderRadius: 64, borderWidth: 4, borderColor: '#fcf9f8', marginBottom: 12 }} 
+              style={{ width: 128, height: 128, borderRadius: 64, borderWidth: 4, borderColor: '#fcf9f8', marginBottom: 8 }} 
               cachePolicy="memory-disk" 
             />
           ) : (
-            <View className="w-32 h-32 rounded-full bg-primary-fixed items-center justify-center mb-3 border-[4px] border-background shadow-sm overflow-hidden">
+            <View className="w-32 h-32 rounded-full bg-surface-container-high items-center justify-center mb-2 border-[4px] border-background shadow-sm overflow-hidden">
               <Text className="font-manrope text-[40px] text-primary">{initials}</Text>
             </View>
           )}
-          <TouchableOpacity className="py-1" onPress={selectAvatar} disabled={uploading}>
+          <TouchableOpacity className="py-2 px-6 rounded-full bg-surface-container-low" onPress={selectAvatar} disabled={uploading}>
             <Text className="font-inter-semibold text-sm text-primary">
               {avatarUrl ? "Change Photo" : "Add Photo"}
             </Text>
@@ -265,14 +267,14 @@ export default function ProfileEditCard() {
 
         {/* Basic Info */}
         <View className="gap-y-6 flex-col">
-          <Text className="font-manrope text-lg text-on-surface tracking-[-0.45px]">Basic Info</Text>
+          <Text className="font-manrope text-xl text-on-surface tracking-tight">Basic Info</Text>
 
           {/* Display Name */}
-          <View className="gap-y-2 flex-col">
-            <Text className="font-inter-medium text-sm text-on-surface-variant">Display Name</Text>
+          <View className="gap-y-3 flex-col">
+            <Text className="font-inter-semibold text-sm text-on-surface-variant">Display Name</Text>
             <View className="relative">
               <TextInput
-                className="bg-surface-container-high px-4 py-3 font-inter text-base text-on-surface rounded-lg"
+                className="bg-surface-container-high px-4 py-4 font-inter text-base text-on-surface rounded-xl"
                 value={name}
                 onChangeText={setName}
                 placeholder="Jane Doe"
@@ -282,27 +284,27 @@ export default function ProfileEditCard() {
           </View>
 
           {/* Pronouns */}
-          <View className="gap-y-2 flex-col relative z-50">
-            <Text className="font-inter-medium text-sm text-on-surface-variant">Pronouns</Text>
+          <View className="gap-y-3 flex-col relative z-50">
+            <Text className="font-inter-semibold text-sm text-on-surface-variant">Pronouns</Text>
             <TouchableOpacity 
-              className="bg-surface-container-high px-4 py-3 rounded-lg flex-row justify-between items-center"
+              className="bg-surface-container-high px-4 py-4 rounded-xl flex-row justify-between items-center"
               onPress={() => setShowPronounDropdown(!showPronounDropdown)}
             >
               <Text className={`font-inter text-base ${pronouns ? 'text-on-surface' : 'text-[#777587]'}`}>
                 {pronouns || "Select pronouns"}
               </Text>
-              <Ionicons name={showPronounDropdown ? "chevron-up" : "chevron-down"} size={20} color="#777587" />
+              <Ionicons name={showPronounDropdown ? "chevron-up" : "chevron-down"} size={22} color="#777587" />
             </TouchableOpacity>
             {showPronounDropdown && (
-              <View className="absolute top-[75px] left-0 right-0 bg-surface-container-high rounded-lg shadow-sm border border-surface-container-highest z-50 overflow-hidden">
+              <View className="absolute top-[85px] left-0 right-0 bg-surface-container-high rounded-xl shadow-md border border-surface-container-highest z-50 overflow-hidden">
                 {['he/him', 'she/her', 'they/them', 'other', 'none'].map((option, idx) => (
                   <TouchableOpacity 
                     key={idx}
-                    className="px-4 py-3 border-b border-surface-container-highest flex-row items-center justify-between"
+                    className="px-5 py-4 border-b border-surface-container-highest flex-row items-center justify-between"
                     onPress={() => { setPronouns(option === 'none' ? '' : option); setShowPronounDropdown(false); }}
                   >
                     <Text className="font-inter text-base text-on-surface">{option}</Text>
-                    {pronouns === option && <Ionicons name="checkmark" size={18} color="#3525cd" />}
+                    {pronouns === option && <Ionicons name="checkmark" size={20} color="#3525cd" />}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -310,20 +312,20 @@ export default function ProfileEditCard() {
           </View>
 
           {/* Bio */}
-          <View className="gap-y-2 flex-col">
+          <View className="gap-y-3 flex-col relative z-40">
             <View className="flex-row items-center justify-between">
-              <Text className="font-inter-medium text-sm text-on-surface-variant">Bio</Text>
+              <Text className="font-inter-semibold text-sm text-on-surface-variant">Bio</Text>
               <Text className="font-inter text-xs text-outline">{bio.length}/120</Text>
             </View>
             <View className="relative">
               <TextInput
-                className="bg-surface-container-high px-4 py-3 font-inter text-base text-on-surface min-h-[80px] rounded-lg"
+                className="bg-surface-container-high px-4 py-4 font-inter text-base text-on-surface min-h-[100px] rounded-xl"
                 value={bio}
                 onChangeText={(text) => {
                   if (text.length <= 120) setBio(text);
                 }}
                 multiline
-                numberOfLines={3}
+                numberOfLines={4}
                 placeholder="Write your bio..."
                 placeholderTextColor="#777587"
                 style={{ textAlignVertical: 'top' }}
@@ -333,57 +335,64 @@ export default function ProfileEditCard() {
         </View>
 
         {/* Links Manager */}
-        <View className="gap-y-6">
+        <View className="gap-y-6 flex-col relative z-10">
           <View className="flex-row items-center justify-between">
-            <Text className="font-manrope text-lg text-on-surface tracking-[-0.45px]">Links Manager</Text>
-            <TouchableOpacity className="flex-row items-center gap-x-1" onPress={addLink}>
-              <Ionicons name="add" size={14} color="#3525cd" />
-              <Text className="font-inter-semibold text-sm text-primary tracking-[-0.45px]">Add Link</Text>
+            <Text className="font-manrope text-xl text-on-surface tracking-tight">Social Links</Text>
+            <TouchableOpacity className="flex-row items-center gap-x-1 py-1.5 px-3 rounded-lg bg-[#e2dfff]" onPress={addLink}>
+              <Ionicons name="add" size={18} color="#3525cd" />
+              <Text className="font-inter-semibold text-sm text-[#3525cd]">Add Link</Text>
             </TouchableOpacity>
           </View>
 
           {links.map((link) => (
-            <View key={link.id} className="flex-row items-center gap-x-3 bg-surface-container-low rounded-xl p-4">
-              <Ionicons name="link-outline" size={16} color="#777587" />
-              <View className="flex-1 gap-y-2 relative">
-                <TextInput
-                  className="font-inter-semibold text-sm text-on-surface bg-surface-container-highest px-3 py-2 rounded-lg"
-                  value={link.title}
-                  onChangeText={(text) => updateLink(link.id, 'title', text)}
-                  placeholder="Website Name (e.g. Portfolio)"
-                  placeholderTextColor="#777587"
-                />
-                <TextInput
-                  className="font-inter text-xs text-on-surface-variant bg-surface-container-highest px-3 py-2 rounded-lg"
-                  value={link.url}
-                  onChangeText={(text) => updateLink(link.id, 'url', text)}
-                  placeholder="example.com"
-                  placeholderTextColor="#777587"
-                  autoCapitalize="none"
-                  keyboardType="url"
-                />
+            <View key={link.id} className="flex-col gap-y-3 bg-surface-container-low rounded-2xl p-5 border border-surface-container-highest">
+              <View className="flex-row justify-between items-center mb-1">
+                <View className="flex-row items-center gap-x-2">
+                  <Ionicons name="link-outline" size={20} color="#777587" />
+                  <Text className="font-inter-semibold text-sm text-on-surface-variant">Link Item</Text>
+                </View>
+                <TouchableOpacity className="p-3 bg-red-50 rounded-full" onPress={() => removeLink(link.id)}>
+                  <Ionicons name="trash-outline" size={18} color="#ba1a1a" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity className="p-2" onPress={() => removeLink(link.id)}>
-                <Ionicons name="trash-outline" size={18} color="#ba1a1a" />
-              </TouchableOpacity>
+              
+              <TextInput
+                className="font-inter text-base text-on-surface bg-surface-container-highest px-4 py-4 rounded-xl"
+                value={link.title}
+                onChangeText={(text) => updateLink(link.id, 'title', text)}
+                placeholder="Title (e.g. Portfolio)"
+                placeholderTextColor="#777587"
+              />
+              <TextInput
+                className="font-inter text-base text-on-surface bg-surface-container-highest px-4 py-4 rounded-xl"
+                value={link.url}
+                onChangeText={(text) => updateLink(link.id, 'url', text)}
+                placeholder="URL (e.g. https://domain.com)"
+                placeholderTextColor="#777587"
+                autoCapitalize="none"
+                keyboardType="url"
+              />
             </View>
           ))}
           {links.length === 0 && (
-            <Text className="font-inter text-sm text-outline text-center py-4">No links added yet.</Text>
+            <View className="py-10 bg-surface-container-low rounded-2xl items-center justify-center border border-dashed border-surface-container-highest">
+                <Text className="font-inter text-base text-outline text-center">No links added yet.</Text>
+            </View>
           )}
         </View>
 
         {/* Save Button */}
         <TouchableOpacity
-          className={`rounded-xl py-4 items-center flex-row justify-center gap-x-2 shadow-sm ${saving ? 'bg-primary/70' : 'bg-primary'}`}
+          className={`rounded-2xl py-5 items-center flex-row justify-center gap-x-2 shadow-sm ${saving ? 'bg-primary/70' : 'bg-primary'}`}
           activeOpacity={0.85}
           onPress={saveProfile}
           disabled={saving}
+          style={{ elevation: 4 }}
         >
           {saving ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
-            <Text className="font-inter-semibold text-base text-on-primary">Save Changes</Text>
+            <Text className="font-inter-semibold text-[17px] text-on-primary">Save Changes</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

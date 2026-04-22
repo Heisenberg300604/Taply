@@ -7,6 +7,7 @@ import {
   Manrope_400Regular,
   Manrope_600SemiBold,
   Manrope_700Bold,
+  Manrope_800ExtraBold,
 } from '@expo-google-fonts/manrope';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -15,6 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, ActivityIndicator } from 'react-native';
 import '../globals.css';
 
 import { useAuthStore } from '@/store/authStore';
@@ -66,7 +68,7 @@ function NavigationGuard() {
 export default function RootLayout() {
   const { initialize } = useAuthStore();
   const [fontsLoaded] = useFonts({
-    Manrope: Manrope_700Bold,
+    Manrope: Manrope_800ExtraBold,
     ManropeRegular: Manrope_400Regular,
     ManropeSemiBold: Manrope_600SemiBold,
     Inter: Inter_400Regular,
@@ -102,7 +104,18 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
         </Stack>
         <NavigationGuard />
+        <LoadingOverlay />
       </GestureHandlerRootView>
     </SafeAreaProvider>
+  );
+}
+
+function LoadingOverlay() {
+  const { isLoading } = useAuthStore();
+  if (!isLoading) return null;
+  return (
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(252, 249, 248, 0.8)', justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#3525cd" />
+    </View>
   );
 }

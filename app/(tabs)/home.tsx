@@ -1,26 +1,26 @@
+import { useAuthStore } from '@/store/authStore';
+import { supabase } from '@/utils/supabase';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useRef } from 'react';
+import * as Clipboard from 'expo-clipboard';
+import { Image } from 'expo-image';
+import * as MediaLibrary from 'expo-media-library';
+import * as Sharing from 'expo-sharing';
+import { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Alert
+  View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
-import { supabase } from '@/utils/supabase';
-import { useAuthStore } from '@/store/authStore';
 import QRCode from 'react-native-qrcode-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
-import * as MediaLibrary from 'expo-media-library';
-import * as Clipboard from 'expo-clipboard';
 
 export default function HomeMyCard() {
   const { session } = useAuthStore();
-  const [profile, setProfile] = useState<{ name: string; pronouns: string; avatar_url: string; role: string; username: string; theme: string } | null>(null);
+  const [profile, setProfile] = useState<{ name: string; pronouns: string; avatar_url: string; username: string; theme: string } | null>(null);
   const cardRef = useRef<View>(null);
 
   useEffect(() => {
@@ -33,7 +33,6 @@ export default function HomeMyCard() {
             avatar_url: data.avatar_url || '',
             username: data.username || '',
             theme: data.theme || 'light',
-            role: 'Software Engineer', // Keeping default role until db field added
           });
         }
       });
@@ -82,7 +81,7 @@ export default function HomeMyCard() {
         Alert.alert('Permission needed', 'Please grant permission to save photos.');
         return;
       }
-      
+
       if (cardRef.current) {
         const uri = await captureRef(cardRef, {
           format: 'png',
@@ -114,10 +113,10 @@ export default function HomeMyCard() {
         {/* ── Header Text ── */}
         <View style={styles.headerText}>
           {profile?.avatar_url ? (
-            <Image 
-              source={{ uri: profile.avatar_url }} 
-              style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }} 
-              cachePolicy="memory-disk" 
+            <Image
+              source={{ uri: profile.avatar_url }}
+              style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }}
+              cachePolicy="memory-disk"
             />
           ) : (
             <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: '#e5e2e1', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
@@ -125,10 +124,9 @@ export default function HomeMyCard() {
             </View>
           )}
           <Text style={styles.name}>{profile?.name || 'Loading...'}</Text>
-          <Text style={styles.role}>
-            {profile?.role || 'Software Engineer'}
-            {profile?.pronouns ? ` • ${profile.pronouns}` : ''}
-          </Text>
+          {!!profile?.pronouns && (
+            <Text style={styles.role}>{profile.pronouns}</Text>
+          )}
         </View>
 
         {/* ── Card Area ── */}
@@ -137,7 +135,7 @@ export default function HomeMyCard() {
 
           {/* QR Code */}
           <View style={styles.qrWrapper}>
-            <QRCode 
+            <QRCode
               value={profileUrl}
               size={192}
               color={activeThemeObj.qr}
@@ -148,13 +146,13 @@ export default function HomeMyCard() {
           {/* Theme Selector */}
           <View style={styles.themeRow}>
             {Object.keys(THEMES).map((themeKey) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={themeKey}
                 style={[
-                  styles.themeBtn, 
+                  styles.themeBtn,
                   { backgroundColor: THEMES[themeKey].bg },
                   profile?.theme === themeKey && { borderWidth: 2, borderColor: '#3525cd' }
-                ]} 
+                ]}
                 onPress={() => updateTheme(themeKey)}
               />
             ))}
@@ -195,7 +193,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-  logo: { fontFamily: 'Manrope', fontSize: 20, color: '#4f46e5', letterSpacing: -1 },
+  logo: { fontFamily: 'Manrope', fontSize: 24, fontWeight: '900', color: '#4f46e5', letterSpacing: -1 },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,
@@ -278,10 +276,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     gap: 8,
-    shadowColor: '#3525cd',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
     elevation: 8,
   },
   shareBtnText: { fontFamily: 'InterMedium', fontSize: 14, color: '#fff' },

@@ -31,15 +31,22 @@ export default function Register() {
     }
 
     setLoading(true);
+    // Forcibly pretend onboarding is true so listener doesn't route us back
+    useAuthStore.setState({ hasCompletedOnboarding: true });
+    
     const { error } = await signUp(email, password, username, name);
+    
+    if (!error) {
+      // Actually complete it in the DB now that we have a user
+      await useAuthStore.getState().completeOnboarding();
+    }
+    
     setLoading(false);
 
     if (error) {
       Alert.alert('Registration Failed', error.message);
     } else {
-      // Assuming auto-login or manual redirect as appropriate
-      Alert.alert('Success', 'Account created! Please verify your email if required.');
-      // The auth listener in \`app/_layout.tsx\` might take over if auto-login happens.
+      Alert.alert('Success', 'Account created! Welcome to Taply.');
     }
   };
 
@@ -148,10 +155,16 @@ export default function Register() {
         </View>
 
         {/* ── Footer ── */}
-        <View style={styles.footerRow}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => router.push('/auth/login')}>
-            <Text style={styles.footerLink}>Log In</Text>
+        <View style={{ gap: 16, alignItems: 'center' }}>
+          <View style={styles.footerRow}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.push('/auth/login')}>
+              <Text style={styles.footerLink}>Log In</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <TouchableOpacity onPress={() => router.push('/auth/forgot-password')}>
+            <Text style={styles.footerLink}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

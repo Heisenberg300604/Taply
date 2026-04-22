@@ -105,8 +105,18 @@ export default function ForgotPassword() {
               <TouchableOpacity
                 style={[styles.submitBtn, !email && styles.submitBtnDisabled]}
                 activeOpacity={email ? 0.85 : 1}
-                onPress={() => {
-                  if (email) setSubmitted(true);
+                onPress={async () => {
+                  if (email) {
+                    const { supabase } = require('@/utils/supabase');
+                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                      redirectTo: 'taply://reset-password',
+                    });
+                    if (error) {
+                      import('react-native').then(rn => rn.Alert.alert('Error', error.message));
+                    } else {
+                      setSubmitted(true);
+                    }
+                  }
                 }}
               >
                 <Text style={styles.submitText}>Send Reset Link</Text>

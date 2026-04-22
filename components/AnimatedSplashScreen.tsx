@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   logoBoxPlaceholder: {
     width: LOGO_SIZE,
     height: LOGO_SIZE,
-    borderRadius: LOGO_SIZE * 0.28,
+    borderRadius: 28,
     backgroundColor: '#3525cd',
     alignItems: 'center',
     justifyContent: 'center',
@@ -196,22 +196,24 @@ const styles = StyleSheet.create({
   },
   logoPlaceholderText: {
     color: '#ffffff',
-    fontSize: LOGO_SIZE * 0.46,
+    fontSize: LOGO_SIZE * 0.55,
     fontFamily: 'Manrope',
+    fontWeight: '900',
   },
   // wordmark
   title: {
-    fontSize: 42,
+    fontSize: 48,
     fontFamily: 'Manrope',
+    fontWeight: '900',
     color: '#1c1b1b',
-    letterSpacing: -0.5,
-    lineHeight: 50,
+    letterSpacing: -2,
+    lineHeight: 54,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: 'InterSemiBold',
-    color: '#777587',
-    letterSpacing: 2.4,
+    color: '#aba9b0',
+    letterSpacing: 4,
     textTransform: 'uppercase',
   },
   // bottom

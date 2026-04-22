@@ -15,6 +15,19 @@ import { TextInput, RefreshControl } from 'react-native';
 
 const AnimatedText = Animated.createAnimatedComponent(TextInput);
 
+const formatTimeAgo = (dateStr: string) => {
+  const diffInMs = new Date().getTime() - new Date(dateStr).getTime();
+  if (isNaN(diffInMs)) return 'Recent';
+  const diffInMins = Math.floor(diffInMs / 60000);
+  if (diffInMins <= 1) return 'Just now';
+  if (diffInMins < 60) return `${diffInMins}m ago`;
+  const diffInHrs = Math.floor(diffInMins / 60);
+  if (diffInHrs < 24) return `${diffInHrs}h ago`;
+  const diffInDays = Math.floor(diffInHrs / 24);
+  if (diffInDays === 1) return 'Yesterday';
+  return `${diffInDays}d ago`;
+};
+
 // Removed static BARS and SCANS arrays since we are now fully dynamic
 
 // ─── Recent Scans ─────────────────────────────────────────────────────────────
@@ -234,7 +247,7 @@ export default function AnalyticsInsights() {
                   <Text style={styles.scanDevice}>{scan.device ? scan.device : 'Mobile'}</Text>
                 </View>
               </View>
-              <Text style={styles.scanTime}>Recent</Text>
+              <Text style={styles.scanTime}>{formatTimeAgo(scan.scanned_at)}</Text>
             </View>
           )) : (
             <Text style={{ fontFamily: 'Inter', color: '#777587', textAlign: 'center', marginVertical: 12 }}>No scans yet. Share your card to see them!</Text>
@@ -254,7 +267,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-  logo: { fontFamily: 'Manrope', fontSize: 20, color: '#4f46e5', letterSpacing: -0.5 },
+  logo: { fontFamily: 'Manrope', fontSize: 24, fontWeight: '900', color: '#4f46e5', letterSpacing: -0.5 },
   scrollContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24, gap: 24 },
 
   // page title

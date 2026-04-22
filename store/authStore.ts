@@ -89,20 +89,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     };
 
     // Listen to auth state changes
-    supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, user: session?.user ?? null, isLoading: false });
+    supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        fetchOnboardingStatus(session.user.id);
+        set({ session, user: session.user, isLoading: true });
+        await fetchOnboardingStatus(session.user.id);
+        set({ isLoading: false });
       } else {
-        set({ hasCompletedOnboarding: false });
+        set({ session: null, user: null, hasCompletedOnboarding: false, isLoading: false });
       }
     });
 
     // Also fetch initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      set({ session, user: session?.user ?? null, isLoading: false });
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        fetchOnboardingStatus(session.user.id);
+        set({ session, user: session.user, isLoading: true });
+        await fetchOnboardingStatus(session.user.id);
+        set({ isLoading: false });
+      } else {
+        set({ session: null, user: null, hasCompletedOnboarding: false, isLoading: false });
       }
     });
   },
