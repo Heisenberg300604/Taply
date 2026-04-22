@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-  logo: { fontFamily: 'Manrope', fontSize: 24, fontWeight: '900', color: '#4f46e5', letterSpacing: -1 },
+  logo: { fontFamily: 'Manrope', fontSize: 24, fontWeight: '900', color: '#3525cd', letterSpacing: -1 },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,

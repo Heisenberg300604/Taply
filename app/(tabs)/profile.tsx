@@ -227,7 +227,7 @@ export default function ProfileEditCard() {
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <View className="items-start gap-y-1">
-          <Text style={{ fontFamily: 'Manrope', fontSize: 24, fontWeight: '900', color: '#4f46e5', letterSpacing: -1 }}>Taply</Text>
+          <Text style={{ fontFamily: 'Manrope', fontSize: 24, fontWeight: '900', color: '#3525cd', letterSpacing: -1 }}>Taply</Text>
           <Text className="font-inter-medium text-sm text-on-surface-variant">Edit Profile</Text>
         </View>
       </View>
