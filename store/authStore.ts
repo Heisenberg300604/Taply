@@ -80,34 +80,58 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: () => {
     const fetchOnboardingStatus = async (userId: string) => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('has_completed_onboarding')
-        .eq('id', userId)
-        .single();
-      set({ hasCompletedOnboarding: data?.has_completed_onboarding ?? false });
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('has_completed_onboarding')
+          .eq('id', userId)
+          .single();
+        if (error) {
+          console.warn('Profiles fetch error in authStore:', error.message);
+        }
+        set({ hasCompletedOnboarding: data?.has_completed_onboarding ?? false });
+      } catch (err) {
+        console.warn('Error fetching onboarding status:', err);
+        set({ hasCompletedOnboarding: false });
+      }
     };
 
     // Listen to auth state changes
     supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        set({ session, user: session.user, isLoading: true });
-        await fetchOnboardingStatus(session.user.id);
+      try {
+        if (session?.user) {
+          set({ session, user: session.user, isLoading: true });
+          await fetchOnboardingStatus(session.user.id);
+        } else {
+          set({ session: null, user: null, hasCompletedOnboarding: false });
+        }
+      } catch (err) {
+        console.error('Error handling auth state change:', err);
+      } finally {
         set({ isLoading: false });
-      } else {
-        set({ session: null, user: null, hasCompletedOnboarding: false, isLoading: false });
       }
     });
 
     // Also fetch initial session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        set({ session, user: session.user, isLoading: true });
-        await fetchOnboardingStatus(session.user.id);
-        set({ isLoading: false });
-      } else {
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        try {
+          if (session?.user) {
+            set({ session, user: session.user, isLoading: true });
+            await fetchOnboardingStatus(session.user.id);
+          } else {
+            set({ session: null, user: null, hasCompletedOnboarding: false });
+          }
+        } catch (err) {
+          console.error('Error handling initial session:', err);
+        } finally {
+          set({ isLoading: false });
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to get Supabase session:', err);
         set({ session: null, user: null, hasCompletedOnboarding: false, isLoading: false });
-      }
-    });
+      });
   },
 }));
