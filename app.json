@@ -9,7 +9,8 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nibedanpati.taply"
     },
     "android": {
       "package": "com.nibedanpati.taply",
@@ -64,7 +65,9 @@
           "photosPermission": "The app needs to access your photo library to save your digital card QR code.",
           "savePhotosPermission": "The app needs to save the digital card QR code to your gallery."
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
