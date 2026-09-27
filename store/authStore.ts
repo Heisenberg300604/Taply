@@ -96,42 +96,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     };
 
-    // Listen to auth state changes
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      try {
-        if (session?.user) {
-          set({ session, user: session.user, isLoading: true });
-          await fetchOnboardingStatus(session.user.id);
-        } else {
-          set({ session: null, user: null, hasCompletedOnboarding: false });
-        }
-      } catch (err) {
-        console.error('Error handling auth state change:', err);
-      } finally {
-        set({ isLoading: false });
-      }
-    });
-
-    // Also fetch initial session
-    supabase.auth
-      .getSession()
-      .then(async ({ data: { session } }) => {
-        try {
-          if (session?.user) {
-            set({ session, user: session.user, isLoading: true });
-            await fetchOnboardingStatus(session.user.id);
-          } else {
-            set({ session: null, user: null, hasCompletedOnboarding: false });
-          }
-        } catch (err) {
-          console.error('Error handling initial session:', err);
-        } finally {
-          set({ isLoading: false });
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to get Supabase session:', err);
+    // Fires INITIAL_SESSION on subscribe, so no separate getSession() call is needed.
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (!session?.user) {
         set({ session: null, user: null, hasCompletedOnboarding: false, isLoading: false });
-      });
+        return;
+      }
+
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        set({ session, user: session.user });
+        return;
+      }
+
+      set({ session, user: session.user, isLoading: true });
+      const userId = session.user.id;
+      // Supabase holds its auth lock while this callback runs; awaiting a query here deadlocks.
+      setTimeout(async () => {
+        await fetchOnboardingStatus(userId);
+        set({ isLoading: false });
+      }, 0);
+    });
   },
 }));
